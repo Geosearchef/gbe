@@ -1,0 +1,5 @@
+
+- retry, differential
+- compression
+- proxy server? -> certificate?
+- encrypt inflight ?
