@@ -1,21 +1,15 @@
 package transmission.receiver
 
-import APPLICATION_VERSION
 import BROADCAST_PORT
 import GBEMain
+import transmission.protocol.BroadcastProtocol
+import transmission.protocol.BroadcastProtocol.CMD_ESTABLISH_CONNECTION
+import transmission.protocol.BroadcastProtocol.CMD_PROBE
 import transmission.protocol.BroadcastProtocolMessage
-import transmission.protocol.PeerInfo
 import java.net.DatagramPacket
 import java.net.DatagramSocket
-import java.net.InetAddress
-import java.nio.ByteBuffer
 
 object BroadcastListener {
-
-    private const val CMD_PROBE: Byte = 30
-    private const val CMD_ESTABLISH_CONNECTION: Byte = 31
-
-    private const val CMD_PROBE_REPLY: Byte = 40
 
     private val datagramSocket: DatagramSocket
 
@@ -40,27 +34,17 @@ object BroadcastListener {
             }
 
             // parse the received packet
-
-            val senderAddress = requestPacket.address.hostAddress
-            val senderPort = requestPacket.port
-
-            var buffer = ByteBuffer.wrap(requestPacket.data)
-
-            val version = buffer.get()
-            val cmd = buffer.get()
-            val peerInfo = BroadcastProtocolMessage.getMessageFromBuffer(PeerInfo::class.java, buffer)
-
+            val requestMessage = BroadcastProtocolMessage.getMessageFromPacket(requestPacket)
 
             // create a response
-            buffer = ByteBuffer.wrap(responseBuffer)
-            buffer.put(APPLICATION_VERSION)
+            val responsePacket = DatagramPacket(responseBuffer, 0, responseBuffer.size)
 
-            when(cmd) {
+            when(requestMessage.cmd) {
                 CMD_PROBE -> {
-                    println("Received broadcast probe from $senderAddress:$senderPort, version $version, identifier: ${peerInfo.identifier}, system: ${peerInfo.system}")
+                    println("Received broadcast probe from ${requestMessage.peerAddress}:${requestMessage.peerPort}, version ${requestMessage.peerVersion}, identifier: ${requestMessage.peerInfo.identifier}, system: ${requestMessage.peerInfo.system}")
 
-                    buffer.put(CMD_PROBE_REPLY)
-                    PeerInfo(APPLICATION_VERSION, GBEMain.identifier).applyToBuffer(buffer)
+                    BroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeReplyData(), requestMessage = requestMessage)
+                        .toDatagramPacket(responsePacket)
                 }
                 CMD_ESTABLISH_CONNECTION -> {
                     throw NotImplementedError() // TODO
@@ -70,7 +54,6 @@ object BroadcastListener {
                 }
             }
 
-            val responsePacket = DatagramPacket(buffer.array(), 0, buffer.position(), InetAddress.getByName(senderAddress), senderPort)
             datagramSocket.send(responsePacket)
         }
     }
