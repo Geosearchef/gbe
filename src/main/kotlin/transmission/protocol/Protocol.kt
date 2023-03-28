@@ -44,7 +44,7 @@ object BroadcastProtocol {
 
 open class BroadcastProtocolMessage(
     val data: BroadcastProtocol.BroadcastData,
-    val peerInfo: PeerInfo = PeerInfo(APPLICATION_VERSION, GBEMain.identifier),
+    val peerInfo: PeerInfo = PeerInfo(-1, GBEMain.guid, "self"),
     val peerAddress: String,
     val peerPort: Int,
     val peerVersion: Byte = APPLICATION_VERSION
@@ -52,7 +52,7 @@ open class BroadcastProtocolMessage(
 
     constructor(
         data: BroadcastProtocol.BroadcastData,
-        peerInfo: PeerInfo = PeerInfo(APPLICATION_VERSION, GBEMain.identifier),
+        peerInfo: PeerInfo = PeerInfo(APPLICATION_VERSION, GBEMain.guid, GBEMain.identifier),
         requestMessage: BroadcastProtocolMessage,
         peerVersion: Byte = APPLICATION_VERSION
     ) : this(data, peerInfo, requestMessage.peerAddress, requestMessage.peerPort, peerVersion)
@@ -64,7 +64,7 @@ open class BroadcastProtocolMessage(
         val buffer = ByteBuffer.wrap(packet.data).apply {
             put(APPLICATION_VERSION)
             put(cmd)
-            putObj(PeerInfo(APPLICATION_VERSION, GBEMain.identifier))
+            putObj(PeerInfo(APPLICATION_VERSION, GBEMain.guid, GBEMain.identifier))
             putObj(data)
         }
 
@@ -101,7 +101,7 @@ open class BroadcastProtocolMessage(
             val messageBytes = ByteArray(length)
             buffer.get(messageBytes, 0, length) // 0 is the offset into the array, the buffer starts at its current index
             val messageString = String(messageBytes)
-            val message = PROTOCOL_GSON.fromJson<T>(messageString, type)
+            val message = PROTOCOL_GSON.fromJson(messageString, type)
 
             return message
         }
@@ -118,6 +118,7 @@ open class BroadcastProtocolMessage(
 
     data class PeerInfo(
         @SerializedName("ver") val version: Byte,
+        @SerializedName("guid") val guid: String,
         @SerializedName("id") val identifier: String,
         @SerializedName("sys") val system: String = getSystemIdentifier(),
     )

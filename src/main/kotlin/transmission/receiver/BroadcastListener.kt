@@ -1,5 +1,6 @@
 package transmission.receiver
 
+import BROADCAST_MULTICAST_ADDRESS
 import BROADCAST_PORT
 import GBEMain
 import transmission.protocol.BroadcastProtocol
@@ -7,15 +8,21 @@ import transmission.protocol.BroadcastProtocol.CMD_ESTABLISH_CONNECTION
 import transmission.protocol.BroadcastProtocol.CMD_PROBE
 import transmission.protocol.BroadcastProtocolMessage
 import java.net.DatagramPacket
-import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.MulticastSocket
 
 object BroadcastListener {
 
-    private val datagramSocket: DatagramSocket
+    private val multicastSocket = MulticastSocket(null)
 
-    init {
-        datagramSocket = DatagramSocket(BROADCAST_PORT)
+    fun init() {
+        multicastSocket.reuseAddress = true
+        multicastSocket.bind(InetSocketAddress(BROADCAST_PORT))
 
+        multicastSocket.joinGroup(InetAddress.getByName(BROADCAST_MULTICAST_ADDRESS)) // the non deprecated method wants an interface, but there's no way to get the default, this method does that automatically
+
+        println("Broadcast listener socket bound to $BROADCAST_PORT, starting listener...")
         Thread(::broadcastThread).start()
     }
 
@@ -26,7 +33,7 @@ object BroadcastListener {
 
         while(GBEMain.running) {
             val requestPacket = DatagramPacket(requestBuffer, 0, requestBuffer.size)
-            datagramSocket.receive(requestPacket)
+            multicastSocket.receive(requestPacket)
 
             if(requestPacket.length < 2) {
                 // invalid
@@ -36,12 +43,17 @@ object BroadcastListener {
             // parse the received packet
             val requestMessage = BroadcastProtocolMessage.getMessageFromPacket(requestPacket)
 
+            if(requestMessage.peerInfo.guid == GBEMain.guid) {
+                println("Received own broadcast, skipping")
+                continue  // skip our own packet
+            }
+
             // create a response
             val responsePacket = DatagramPacket(responseBuffer, 0, responseBuffer.size)
 
             when(requestMessage.cmd) {
                 CMD_PROBE -> {
-                    println("Received broadcast probe from ${requestMessage.peerAddress}:${requestMessage.peerPort}, version ${requestMessage.peerVersion}, identifier: ${requestMessage.peerInfo.identifier}, system: ${requestMessage.peerInfo.system}")
+                    println("Received broadcast probe from ${requestMessage.peerAddress}:${requestMessage.peerPort}, version ${requestMessage.peerVersion}, identifier: ${requestMessage.peerInfo.identifier}, system: ${requestMessage.peerInfo.system}, guid: ${requestMessage.peerInfo.guid}")
 
                     BroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeReplyData(), requestMessage = requestMessage)
                         .toDatagramPacket(responsePacket)
@@ -54,7 +66,7 @@ object BroadcastListener {
                 }
             }
 
-            datagramSocket.send(responsePacket)
+            multicastSocket.send(responsePacket)
         }
     }
 
