@@ -3,6 +3,6 @@ package test
 import transmission.transmitter.BroadcastProber
 
 
-fun main(args: Array<String>) {
+fun main() {
     BroadcastProber.probe()
 }

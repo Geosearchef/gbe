@@ -2,12 +2,15 @@ package transmission.transmitter
 
 import BROADCAST_MULTICAST_ADDRESS
 import BROADCAST_PORT
+import mu.KotlinLogging
 import transmission.protocol.BroadcastProtocol
 import transmission.protocol.BroadcastProtocolMessage
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 
 object BroadcastProber {
+
+    private val logger = KotlinLogging.logger {  }
 
     fun probe() {
         val datagramSocket = DatagramSocket()
@@ -19,9 +22,10 @@ object BroadcastProber {
         BroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeData(), peerAddress = BROADCAST_MULTICAST_ADDRESS, peerPort = BROADCAST_PORT)
             .toDatagramPacket(requestPacket)
 
-        println("Probing from 0.0.0.0:${datagramSocket.localPort}...")
+        logger.debug { "Probing from 0.0.0.0:${datagramSocket.localPort}..." }
         datagramSocket.send(requestPacket)
 
+        // TODO: listen for a few seconds on same socket (port) and call callback if receiver found
     }
 
 

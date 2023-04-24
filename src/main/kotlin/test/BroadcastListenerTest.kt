@@ -3,9 +3,8 @@ package test
 import transmission.receiver.BroadcastListener
 import transmission.transmitter.BroadcastProber
 
-
-fun main(args: Array<String>) {
-    println("listening...")
+fun main() {
+    println("Starting broadcast listener test")
     BroadcastListener.init()
 
     Thread.sleep(1000)

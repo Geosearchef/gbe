@@ -3,6 +3,7 @@ package transmission.receiver
 import BROADCAST_MULTICAST_ADDRESS
 import BROADCAST_PORT
 import GBEMain
+import mu.KotlinLogging
 import transmission.protocol.BroadcastProtocol
 import transmission.protocol.BroadcastProtocol.CMD_ESTABLISH_CONNECTION
 import transmission.protocol.BroadcastProtocol.CMD_PROBE
@@ -14,6 +15,8 @@ import java.net.MulticastSocket
 
 object BroadcastListener {
 
+    private val logger = KotlinLogging.logger {  }
+
     private val multicastSocket = MulticastSocket(null)
 
     fun init() {
@@ -22,7 +25,7 @@ object BroadcastListener {
 
         multicastSocket.joinGroup(InetAddress.getByName(BROADCAST_MULTICAST_ADDRESS)) // the non deprecated method wants an interface, but there's no way to get the default, this method does that automatically
 
-        println("Broadcast listener socket bound to $BROADCAST_PORT, starting listener...")
+        logger.info { "Broadcast listener socket bound to $BROADCAST_PORT, starting listener..." }
         Thread(::broadcastThread).start()
     }
 
@@ -44,7 +47,7 @@ object BroadcastListener {
             val requestMessage = BroadcastProtocolMessage.getMessageFromPacket(requestPacket)
 
             if(requestMessage.peerInfo.guid == GBEMain.guid) {
-                println("Received own broadcast, skipping")
+                logger.debug { "Received own broadcast, skipping" }
                 continue  // skip our own packet
             }
 
@@ -53,7 +56,7 @@ object BroadcastListener {
 
             when(requestMessage.cmd) {
                 CMD_PROBE -> {
-                    println("Received broadcast probe from ${requestMessage.peerAddress}:${requestMessage.peerPort}, version ${requestMessage.peerVersion}, identifier: ${requestMessage.peerInfo.identifier}, system: ${requestMessage.peerInfo.system}, guid: ${requestMessage.peerInfo.guid}")
+                    logger.debug { "Received broadcast probe from ${requestMessage.peerAddress}:${requestMessage.peerPort}, version ${requestMessage.peerVersion}, identifier: ${requestMessage.peerInfo.identifier}, system: ${requestMessage.peerInfo.system}, guid: ${requestMessage.peerInfo.guid}" }
 
                     BroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeReplyData(), requestMessage = requestMessage)
                         .toDatagramPacket(responsePacket)
@@ -62,6 +65,7 @@ object BroadcastListener {
                     throw NotImplementedError() // TODO
                 }
                 else -> {
+                    logger.warn { "Received message with unknown command: ${requestMessage.cmd}" }
                     continue
                 }
             }

@@ -1,0 +1,8 @@
+
+
+
+Kotlin Logging is undergoing some major changes due to slfj4 and android not being happily married ever after
+-> why?
+- Current this project is using the KotlinLogging implementation tethered to slf4j
+
+

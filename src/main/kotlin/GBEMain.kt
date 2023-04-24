@@ -1,3 +1,4 @@
+import mu.KotlinLogging
 import java.util.*
 
 const val BROADCAST_PORT = 31401
@@ -9,6 +10,8 @@ const val APPLICATION_VERSION: Byte = 1
 
 object GBEMain {
 
+    val logger = KotlinLogging.logger {  }
+
     val running = true
     val identifier = "none"
     val guid = UUID.randomUUID().toString()
@@ -16,8 +19,8 @@ object GBEMain {
 }
 
 
-fun main(args: Array<String>) {
-    println("Starting GBE app")
+fun main() {
+    GBEMain.logger.info { "Starting GBE app" }
 }
 
 
