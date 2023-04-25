@@ -137,6 +137,6 @@ open class BroadcastProtocolMessage(
         @SerializedName("ver") val version: Byte,
         @SerializedName("guid") val guid: String,
         @SerializedName("id") val identifier: String,
-        @SerializedName("sys") val system: String = getSystemIdentifier(),
+        @SerializedName("sys") val system: String = getSystemIdentifier()
     )
 }
