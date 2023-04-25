@@ -8,6 +8,7 @@ import transmission.protocol.BroadcastProtocol
 import transmission.protocol.BroadcastProtocol.CMD_ESTABLISH_CONNECTION
 import transmission.protocol.BroadcastProtocol.CMD_PROBE
 import transmission.protocol.BroadcastProtocolMessage
+import transmission.protocol.SendingBroadcastProtocolMessage
 import java.net.DatagramPacket
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -40,6 +41,7 @@ object BroadcastListener {
 
             if(requestPacket.length < 2) {
                 // invalid
+                logger.trace { "Received invalid packet of length ${requestPacket.length}" }
                 continue
             }
 
@@ -56,9 +58,9 @@ object BroadcastListener {
 
             when(requestMessage.cmd) {
                 CMD_PROBE -> {
-                    logger.debug { "Received broadcast probe from ${requestMessage.peerAddress}:${requestMessage.peerPort}, version ${requestMessage.peerVersion}, identifier: ${requestMessage.peerInfo.identifier}, system: ${requestMessage.peerInfo.system}, guid: ${requestMessage.peerInfo.guid}" }
+                    logger.debug { "Received broadcast probe from ${requestMessage.sourceAddress}:${requestMessage.sourcePort}, version ${requestMessage.peerVersion}, identifier: ${requestMessage.peerInfo.identifier}, system: ${requestMessage.peerInfo.system}, guid: ${requestMessage.peerInfo.guid}" }
 
-                    BroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeReplyData(), requestMessage = requestMessage)
+                    SendingBroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeReplyData(), requestMessage = requestMessage)
                         .toDatagramPacket(responsePacket)
                 }
                 CMD_ESTABLISH_CONNECTION -> {

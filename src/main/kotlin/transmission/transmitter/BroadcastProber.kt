@@ -4,7 +4,7 @@ import BROADCAST_MULTICAST_ADDRESS
 import BROADCAST_PORT
 import mu.KotlinLogging
 import transmission.protocol.BroadcastProtocol
-import transmission.protocol.BroadcastProtocolMessage
+import transmission.protocol.SendingBroadcastProtocolMessage
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 
@@ -19,7 +19,7 @@ object BroadcastProber {
         val responseBuffer = ByteArray(64000)
 
         val requestPacket = DatagramPacket(requestBuffer, 0, requestBuffer.size)
-        BroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeData(), peerAddress = BROADCAST_MULTICAST_ADDRESS, peerPort = BROADCAST_PORT)
+        SendingBroadcastProtocolMessage(BroadcastProtocol.BroadcastProbeData(), targetAddress = BROADCAST_MULTICAST_ADDRESS, targetPort = BROADCAST_PORT)
             .toDatagramPacket(requestPacket)
 
         logger.debug { "Probing from 0.0.0.0:${datagramSocket.localPort}..." }

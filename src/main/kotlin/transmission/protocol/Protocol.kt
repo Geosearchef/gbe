@@ -26,6 +26,7 @@ object BroadcastProtocol {
     fun getTypeByCmd(cmd: Byte) = dataTypeByCmd[cmd]
     fun <T> getCmdByType(type: Class<T>): Byte? = dataTypeByCmd.filterValues { it == type }.entries.firstOrNull()?.key
 
+    // payloads
     open class BroadcastData
     class BroadcastProbeData : BroadcastData()
     class BroadcastProbeReplyData : BroadcastData()
@@ -42,23 +43,29 @@ object BroadcastProtocol {
 //    override val peerVersion: Byte = -1
 //): BroadcastProtocolMessage(cmd, peerVersion)
 
-open class BroadcastProtocolMessage(
-    val data: BroadcastProtocol.BroadcastData,
-    val peerInfo: PeerInfo = PeerInfo(-1, GBEMain.guid, "self"),
-    val peerAddress: String,
-    val peerPort: Int,
-    val peerVersion: Byte = APPLICATION_VERSION
-) {
+
+// Peer Info is part of the protocol
+// It is therefore set on sending (converting) a message
+//
+
+class ReceivedBroadcastProtocolMessage(
+    data: BroadcastProtocol.BroadcastData,
+    val peerInfo: PeerInfo,
+    val sourceAddress: String,
+    val sourcePort: Int,
+    val peerVersion: Byte
+) : BroadcastProtocolMessage(data)
+
+class SendingBroadcastProtocolMessage(
+    data: BroadcastProtocol.BroadcastData,
+    val targetAddress: String,
+    val targetPort: Int,
+) : BroadcastProtocolMessage(data) {
 
     constructor(
         data: BroadcastProtocol.BroadcastData,
-        peerInfo: PeerInfo = PeerInfo(APPLICATION_VERSION, GBEMain.guid, GBEMain.identifier),
-        requestMessage: BroadcastProtocolMessage,
-        peerVersion: Byte = APPLICATION_VERSION
-    ) : this(data, peerInfo, requestMessage.peerAddress, requestMessage.peerPort, peerVersion)
-
-    val cmd: Byte = BroadcastProtocol.getCmdByType(data::class.java) ?: throw RuntimeException("Invalid type, no command found for type: ${data::class.java.canonicalName}")
-
+        requestMessage: ReceivedBroadcastProtocolMessage,
+    ) : this(data, targetAddress = requestMessage.sourceAddress, targetPort = requestMessage.sourcePort)
 
     fun toDatagramPacket(packet: DatagramPacket): DatagramPacket {
         val buffer = ByteBuffer.wrap(packet.data).apply {
@@ -68,15 +75,25 @@ open class BroadcastProtocolMessage(
             putObj(data)
         }
 
-        packet.address = InetAddress.getByName(peerAddress)
-        packet.port = peerPort
+        packet.address = InetAddress.getByName(targetAddress)
+        packet.port = targetPort
         packet.length = buffer.position()
 
         return packet
     }
 
+}
+
+
+open class BroadcastProtocolMessage(
+    val data: BroadcastProtocol.BroadcastData,
+) {
+
+    val cmd: Byte = BroadcastProtocol.getCmdByType(data::class.java) ?: throw RuntimeException("Invalid type, no command found for type: ${data::class.java.canonicalName}")
+
+
     companion object {
-        fun getMessageFromPacket(packet: DatagramPacket): BroadcastProtocolMessage {
+        fun getMessageFromPacket(packet: DatagramPacket): ReceivedBroadcastProtocolMessage {
             val senderAddress = packet.address.hostAddress
             val senderPort = packet.port
 
@@ -90,24 +107,24 @@ open class BroadcastProtocolMessage(
 
             val dataObj = buffer.getObj(dataType)
 
-            val message = BroadcastProtocolMessage(dataObj, peerInfo, senderAddress, senderPort, version)
+            val message = ReceivedBroadcastProtocolMessage(dataObj, peerInfo, senderAddress, senderPort, version)
 
             return message
         }
 
-        private fun <T> ByteBuffer.getObj(type: Class<T>) = getMessageObjectFromBuffer(type, this)
-        private fun <T> getMessageObjectFromBuffer(type: Class<T>, buffer: ByteBuffer): T {
+        fun <T> ByteBuffer.getObj(type: Class<T>) = getMessageObjectFromBuffer(type, this)
+        fun <T> getMessageObjectFromBuffer(type: Class<T>, buffer: ByteBuffer): T {
             val length = buffer.int
-            val messageBytes = ByteArray(length)
-            buffer.get(messageBytes, 0, length) // 0 is the offset into the array, the buffer starts at its current index
-            val messageString = String(messageBytes)
-            val message = PROTOCOL_GSON.fromJson(messageString, type)
+            val objectBytes = ByteArray(length)
+            buffer.get(objectBytes, 0, length) // 0 is the offset into the array, the buffer starts at its current index
+            val objectString = String(objectBytes)
+            val obj = PROTOCOL_GSON.fromJson(objectString, type)
 
-            return message
+            return obj
         }
 
-        private fun <T> ByteBuffer.putObj(obj: T) = applyMessageObjectToBuffer(obj, this)
-        private fun <T> applyMessageObjectToBuffer(obj: T, buffer: ByteBuffer) {
+        fun <T> ByteBuffer.putObj(obj: T) = applyMessageObjectToBuffer(obj, this)
+        fun <T> applyMessageObjectToBuffer(obj: T, buffer: ByteBuffer) {
             val objectString = PROTOCOL_GSON.toJson(obj)
             val objectBytes = objectString.toByteArray()
 
