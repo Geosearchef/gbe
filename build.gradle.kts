@@ -17,6 +17,8 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.7")
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
 
+    implementation("com.formdev:flatlaf:3.1.1")
+
     implementation("com.google.code.gson:gson:2.10.1")
 
     testImplementation(kotlin("test"))
