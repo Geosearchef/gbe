@@ -1,6 +1,8 @@
 import mu.KotlinLogging
+import transmission.protocol.BroadcastProtocolMessage
 import ui.HoneyController
 import ui.UIController
+import util.getSystemIdentifier
 import java.util.*
 
 const val APPLICATION_NAME = "BearDrop"
@@ -30,28 +32,12 @@ fun main() {
 
     GBEMain.uiController.init()
 
-//    val frame = JFrame("GBE").also { frame ->
-//        frame.size = Dimension(400,500)
-//        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-//        frame.setLocationRelativeTo(null)
-//        frame.layout = null
-//
-//        val textField = JTextField("Hello World").apply {
-//            bounds = Rectangle(20, 20, 100, 30)
-//            frame.add(this)
-//        }
-//
-//        JButton("Press me").apply {
-//            bounds = Rectangle(20, 55, 100, 30)
-//            addActionListener {
-//                println(textField.text)
-//            }
-//            frame.add(this)
-//        }
-//
-//        frame.invalidate()
-//        frame.isVisible = true
-//    }
+    Thread.sleep(1000)
+
+    GBEMain.uiController.updateReceivers(listOf(
+        BroadcastProtocolMessage.PeerInfo(1, "thisIsTheGuid", "kirella-6a", getSystemIdentifier()),
+        BroadcastProtocolMessage.PeerInfo(1, "otherGuid", "kirella-desktop", getSystemIdentifier()),
+    ))
 }
 
 

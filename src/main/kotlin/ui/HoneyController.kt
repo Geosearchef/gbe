@@ -15,7 +15,7 @@ object HoneyController: UIController {
     }
 
     override fun updateReceivers(receivers: List<BroadcastProtocolMessage.PeerInfo>) {
-        TODO("Not yet implemented")
+        mainWindow?.sendPanel?.setReceiverList(receivers)
     }
 
 }
