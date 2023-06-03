@@ -39,6 +39,3 @@ fun main() {
         BroadcastProtocolMessage.PeerInfo(1, "otherGuid", "kirella-desktop", getSystemIdentifier()),
     ))
 }
-
-
-
