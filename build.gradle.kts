@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.8.20"
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 java {
@@ -40,4 +41,14 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainClass.set("GBEMainKt")
+}
+
+tasks.withType<Jar> {
+    manifest {
+        attributes(
+            mapOf(
+                "Main-Class" to application.mainClass
+            )
+        )
+    }
 }
