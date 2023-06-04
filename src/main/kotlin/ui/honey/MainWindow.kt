@@ -2,16 +2,30 @@ package ui.honey
 
 import APPLICATION_NAME
 import APPLICATION_VERSION
+import com.formdev.flatlaf.extras.FlatSVGIcon
+import com.formdev.flatlaf.extras.components.FlatButton
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.Toolkit
 import javax.swing.*
+import javax.swing.BorderFactory.createEmptyBorder as emptyBorder
 
 class MainWindow : JPanel() {
 
     companion object {
         const val SIZE_X = 400
         const val SIZE_Y = 500
+    }
+
+    val settingsButton = FlatButton().apply {
+        buttonType = FlatButton.ButtonType.toolBarButton
+        isFocusable = false
+        icon = FlatSVGIcon(MainWindow::class.java.getResource("/icons/settings-icon-light.svg"))
+    }
+    val menuBar = JMenuBar().apply {
+        UIManager.put("TitlePane.menuBarEmbedded", true)
+        add(Box.createHorizontalGlue())
+        add(settingsButton)
     }
 
     // TODO: move the init code to the init block for readability ???
@@ -23,36 +37,40 @@ class MainWindow : JPanel() {
         frame.layout = BorderLayout()
 
         frame.iconImage = Toolkit.getDefaultToolkit().getImage(MainWindow::class.java.getResource("/icons/icon1024.png"))
+
+        frame.jMenuBar = menuBar
     }
 
-
-    val tabbedPane = JTabbedPane(JTabbedPane.BOTTOM, JTabbedPane.SCROLL_TAB_LAYOUT).apply {
-        // these properties are part of the look and feel and therefore not statically typed, this could be moved to a properties file
-        putClientProperty("JTabbedPane.showTabSeparators", true)
-        putClientProperty("JTabbedPane.showContentSeparator", true)
-        putClientProperty("JTabbedPane.tabAreaAlignment", "fill")
-        putClientProperty("JTabbedPane.tabAlignment", SwingConstants.CENTER)
-        putClientProperty("JTabbedPane.tabWidthMode", "equal")
-        putClientProperty("JTabbedPane.tabIconPlacement", SwingConstants.TOP)
-    }
-
-    val sendPanel = SendPanel()
-    val receivePanel = ReceivePanel()
+    val sendReceivePanel = SendReceivePanel()
     val settingsPanel = SettingsPanel()
 
-
+    // build window
     init {
         this.layout = BorderLayout()
+        this.border = emptyBorder(10, 20, 20, 20)
 
-        tabbedPane.addTab("Send", UIManager.getIcon("FileChooser.upFolderIcon"), sendPanel)
-        tabbedPane.addTab("Receive", UIManager.getIcon("FileChooser.listViewIcon"), receivePanel)
-        tabbedPane.addTab("Settings", UIManager.getIcon("FileChooser.detailsViewIcon"), settingsPanel)
+        this.add(sendReceivePanel, BorderLayout.CENTER)
 
-        this.add(tabbedPane, BorderLayout.CENTER)
-        frame.contentPane.add(this, BorderLayout.CENTER) // should this be frame.getContentPane().add() ?
+        frame.contentPane.add(this, BorderLayout.CENTER)
     }
 
+    // register listeners
+    init {
+        settingsButton.addActionListener {
+            if(settingsPanel in this.components) {
+                this.remove(settingsPanel)
+                this.add(sendReceivePanel) // TODO: transmission in progress?
+            } else {
+                this.removeAll()
+                this.add(settingsPanel)
+            }
 
+            this.revalidate() // remove invalidated the containment hierachy -> revalidate
+            this.repaint() // https://docs.oracle.com/javase/tutorial/uiswing/components/jcomponent.html#custompaintingapi - Always invoke repaint after revalidate
+        }
+    }
+
+    // show window
     init {
         frame.invalidate()
         frame.isVisible = true

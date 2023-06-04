@@ -25,6 +25,8 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
 
     implementation("com.formdev:flatlaf:3.1.1")
+    implementation("com.formdev:flatlaf-extras:3.1.1")
+    implementation("com.formdev:svgSalamander:1.1.4")
 
     implementation("com.google.code.gson:gson:2.10.1")
 

@@ -3,6 +3,7 @@ package ui.honey
 import transmission.protocol.BroadcastProtocolMessage
 import java.awt.*
 import javax.swing.*
+import javax.swing.BorderFactory.createEmptyBorder as emptyBorder
 
 class SendPanel : JPanel() {
 
@@ -10,11 +11,31 @@ class SendPanel : JPanel() {
 
     init {
         this.layout = BorderLayout()
-        this.border = BorderFactory.createEmptyBorder(20, 20, 20, 20)
+//        this.border = BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        this.minimumSize = Dimension(0, 300)
+        this.maximumSize = Dimension(Int.MAX_VALUE, 300)
+        this.preferredSize = Dimension(400, 300)
+
+//        this.border = BorderFactory.createCompoundBorder(
+//            BorderFactory.createLineBorder(Color.red),
+//            this.border
+//        )
+
+        this.add(JLabel("Send").apply {
+            font = font.deriveFont(Font.BOLD, 16.0f)
+            border = emptyBorder(0, 0, 5, 0)
+        }, BorderLayout.NORTH)
 
         receiverList.cellRenderer = ReceiverListCellRenderer
         receiverList.visibleRowCount = 6
         this.add(receiverList, BorderLayout.CENTER)
+
+        // TODO
+        receiverList.addListSelectionListener {
+            val fileChooser = JFileChooser()
+            fileChooser.showOpenDialog(this)
+            receiverList.selectedIndex = -1
+        }
     }
 
     fun setReceiverList(receivers: List<BroadcastProtocolMessage.PeerInfo>) {
@@ -50,7 +71,7 @@ class SendPanel : JPanel() {
             val cellPanel = JPanel()
             cellPanel.layout = BorderLayout()
             cellPanel.background = backgroundColor
-            cellPanel.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            cellPanel.border = emptyBorder(10, 10, 10, 10)
 
             cellPanel.add(infoPanel, BorderLayout.WEST)
 
