@@ -17,6 +17,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+//    maven { setUrl("https://jitpack.io") }
 }
 
 dependencies {
@@ -30,7 +31,16 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.10.1")
 
-    testImplementation(kotlin("test"))
+    implementation("com.github.Geosearchef:spark:master")
+    implementation("com.sparkjava:spark-core:2.9.4")
+//    testImplementation(kotlin("test"))
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
+    // https://mvnrepository.com/artifact/io.ktor/ktor-client
+    // https://mvnrepository.com/artifact/io.ktor/ktor-client
+    implementation("io.ktor:ktor-client:2.3.1")
+    implementation("io.ktor:ktor-client-cio-jvm:2.3.1")
+
+
 }
 
 tasks.test {
